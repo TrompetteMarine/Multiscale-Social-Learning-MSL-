@@ -75,7 +75,7 @@ CSV.write("output/shift_metrics.csv", results)
 println("🚀 Monte-Carlo finished → shift_metrics.csv")
 
 # ------------------------------ quick visual: PDF of δ̂_micro -----------------
-micro_vals = results[result.layer .== :micro, :delta_hat]
+micro_vals = results[results.layer .== :micro, :delta_hat]
 histogram(micro_vals; bins = 40,
           title = "Distribution of \\hat{δ}_micro(T)",
           xlabel = "shift metric",
