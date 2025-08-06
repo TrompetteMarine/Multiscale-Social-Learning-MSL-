@@ -1,324 +1,487 @@
 module Metrics
-using Statistics, StatsBase, LinearAlgebra, Distances
 
-export ShiftPars, shift_estimator, layer_feature
-export consensus_metrics, polarization_metrics, synchronization_metrics
-export phase_space_analysis, stability_analysis, entropy_metrics
-export correlation_analysis, network_influence_metrics
+using Statistics, StatsBase, LinearAlgebra, Distributions
 
-# ============================================================================ 
-# Shift estimator (original functionality)
-# ============================================================================ 
+export ShiftDetectionPars, RegimeClassification
+export shift_estimator, detect_regime_transition
+export consensus_metrics, polarization_metrics, multi_scale_analysis
+export bifurcation_analysis, critical_peer_influence
+export layer_shift_metrics, propagation_indicators
+export mean_field_analysis, lyapunov_analysis
 
-struct ShiftPars
-    kernel::Function      # K(u)
-    hN::Float64           # bandwidth h_N
+# ============================================================================
+# Multi-Scale Shift Detection (Paper Section 5)
+# ============================================================================
+
+@kwdef struct ShiftDetectionPars
+    # Kernel parameters
+    kernel::Function = epanechnikov_kernel
+    bandwidth_factor::Float64 = 1.06     # Silverman's rule factor
+    
+    # Detection thresholds
+    significance_level::Float64 = 0.05
+    critical_mass_threshold::Float64 = 0.1
+    
+    # Temporal parameters  
+    observation_window::Int = 50
+    stability_window::Int = 20
 end
 
-# Default: Epanechnikov kernel, h_N = c / √N  (c chosen later)
-ShiftPars(N; c = 1.06) = ShiftPars(u -> max(0, 0.75 * (1 - u^2)), c / sqrt(N))
+# Regime classification (Paper Section 6)
+@enum RegimeType Equilibrium Buffered Broadcast Cascade
 
-function layer_feature(x::Vector{Float64}, ℓ::Symbol, W::AbstractMatrix)
-    if ℓ == :micro
-        return x
-    elseif ℓ == :meso                 # mean belief of each agent's neighbourhood
-        return (W * x)                # W is row-stochastic, so W*x is local mean
-    elseif ℓ == :macro
-        return fill(mean(x), length(x))
+struct RegimeClassification
+    regime::RegimeType
+    detection_flags::Dict{Symbol, Bool}
+    propagation_indicators::Dict{Symbol, Float64}
+    confidence::Float64
+end
+
+# ============================================================================
+# Layer-Specific Feature Extraction
+# ============================================================================
+
+function extract_layer_features(trajectories::Dict, layer::Symbol, t_idx::Int)
+    """Extract features for different aggregation layers"""
+    beliefs = [trajectories[:beliefs][i][t_idx] for i in 1:length(trajectories[:beliefs])]
+    
+    if layer == :micro
+        return beliefs  # Individual beliefs
+    elseif layer == :meso
+        # Community-level averages (simplified to spatial clusters)
+        N = length(beliefs)
+        community_size = max(5, N ÷ 10)
+        meso_features = Float64[]
+        
+        for start_idx in 1:community_size:N
+            end_idx = min(start_idx + community_size - 1, N)
+            community_mean = mean(beliefs[start_idx:end_idx])
+            append!(meso_features, fill(community_mean, end_idx - start_idx + 1))
+        end
+        return meso_features[1:N]  # Ensure same length
+    elseif layer == :macro
+        # Global average for all agents
+        global_mean = mean(beliefs)
+        return fill(global_mean, length(beliefs))
     else
-        error("layer ℓ must be :micro, :meso or :macro")
+        throw(ArgumentError("Layer must be :micro, :meso, or :macro"))
     end
 end
 
-function shift_estimator(t_vec::Vector{Float64}, g_vec::Vector{Float64},
-                         T::Float64, pars::ShiftPars)
-    N = length(g_vec)
-    K, h = pars.kernel, pars.hN
-    return sum(i -> K((t_vec[i] - T)/h) * g_vec[i], 1:N) / (N * h)
+# ============================================================================
+# Shift Estimators (Paper Section 5.1)
+# ============================================================================
+
+function epanechnikov_kernel(u::Float64)
+    return abs(u) ≤ 1.0 ? 0.75 * (1.0 - u^2) : 0.0
 end
 
-# ============================================================================ 
-# Consensus metrics
-# ============================================================================ 
+function shift_estimator(t_vec::Vector{Float64}, features::Vector{Float64}, 
+                        T_obs::Float64, params::ShiftDetectionPars)
+    """
+    Kernel-smoothed shift estimator δ̂_ℓ(T) from Equation (29)
+    """
+    N = length(features)
+    h_N = params.bandwidth_factor / sqrt(N)
+    
+    estimator = 0.0
+    weight_sum = 0.0
+    
+    for i in 1:length(t_vec)
+        weight = params.kernel((t_vec[i] - T_obs) / h_N)
+        estimator += weight * features[i]
+        weight_sum += weight
+    end
+    
+    return weight_sum > 0 ? estimator / weight_sum : 0.0
+end
+
+function layer_shift_metrics(trajectories::Dict, layers::Vector{Symbol}=[:micro, :meso, :macro])
+    """
+    Compute shift metrics for all layers over time
+    """
+    T_steps = length(trajectories[:beliefs][1])
+    shift_data = Dict{Symbol, Vector{Float64}}()
+    
+    for layer in layers
+        layer_shifts = Float64[]
+        
+        for t in 1:T_steps
+            features = extract_layer_features(trajectories, layer, t)
+            # Use IQR as shift metric (robust to outliers)
+            shift_val = quantile(features, 0.75) - quantile(features, 0.25)
+            push!(layer_shifts, shift_val)
+        end
+        
+        shift_data[layer] = layer_shifts
+    end
+    
+    return shift_data
+end
+
+# ============================================================================
+# Consensus and Polarization Analysis (Paper Section 4)
+# ============================================================================
 
 function consensus_metrics(beliefs::Vector{Float64})
+    """
+    Multi-dimensional consensus analysis
+    """
     N = length(beliefs)
     μ = mean(beliefs)
+    σ = std(beliefs)
     
-    # Standard deviation as disagreement measure
-    disagreement = std(beliefs)
-    
-    # Consensus strength (1 - normalized disagreement)
-    consensus = 1 - (disagreement / sqrt(N))  # normalized by theoretical max
+    # Consensus strength (normalized disagreement)
+    max_possible_std = sqrt(N) * std(beliefs) / sqrt(N-1)  # Theoretical maximum
+    consensus_strength = 1.0 - min(1.0, σ / max_possible_std)
     
     # Range-based consensus
-    range_consensus = 1 - (maximum(beliefs) - minimum(beliefs)) / 4  # assuming beliefs in [-2,2]
+    belief_range = maximum(beliefs) - minimum(beliefs)
+    range_consensus = 1.0 - min(1.0, belief_range / 6.0)  # Assume beliefs in [-3,3]
+    
+    # Distribution concentration
+    mad_val = median(abs.(beliefs .- median(beliefs)))
+    concentration = 1.0 / (1.0 + mad_val)
     
     return Dict(
-        :mean_belief => μ,
-        :disagreement => disagreement,
-        :consensus => max(0, consensus),
-        :range_consensus => max(0, range_consensus),
-        :iqr => quantile(beliefs, 0.75) - quantile(beliefs, 0.25)
+        :mean => μ,
+        :std => σ,
+        :consensus_strength => consensus_strength,
+        :range_consensus => range_consensus,
+        :concentration => concentration,
+        :agreement_rate => sum(abs.(beliefs .- μ) .< σ) / N
     )
 end
 
-# ============================================================================ 
-# Polarization metrics
-# ============================================================================ 
-
-function polarization_metrics(beliefs::Vector{Float64}; threshold=0.1)
+function polarization_metrics(beliefs::Vector{Float64})
+    """
+    Multi-modal polarization analysis following paper methodology
+    """
     N = length(beliefs)
     
     # Bimodality coefficient
-    skew = skewness(beliefs)
-    kurt = kurtosis(beliefs)
-    bimodality = (skew^2 + 1) / (kurt + 3 * (N-1)^2 / ((N-2)*(N-3)))
+    kurt_val = kurtosis(beliefs)
+    skew_val = skewness(beliefs) 
+    bimodality = (skew_val^2 + 1) / (kurt_val + 3 * (N-1)^2 / ((N-2)*(N-3)))
     
     # Esteban-Ray polarization index
-    sorted_beliefs = sort(beliefs)
     er_polarization = 0.0
     for i in 1:N, j in 1:N
         if i != j
-            er_polarization += abs(sorted_beliefs[i] - sorted_beliefs[j])
+            er_polarization += abs(beliefs[i] - beliefs[j])
         end
     end
     er_polarization /= (N * (N-1))
     
-    # Group polarization (split at median)
+    # Group polarization (median split)
     median_belief = median(beliefs)
     lower_group = beliefs[beliefs .<= median_belief]
     upper_group = beliefs[beliefs .> median_belief]
     
-    group_polarization = if length(lower_group) > 0 && length(upper_group) > 0
+    group_separation = if length(lower_group) > 0 && length(upper_group) > 0
         abs(mean(upper_group) - mean(lower_group))
     else
         0.0
     end
     
+    # Fragmentation index
+    sorted_beliefs = sort(beliefs)
+    gaps = diff(sorted_beliefs)
+    fragmentation = length(gaps[gaps .> 0.5]) / (N-1)  # Fraction of large gaps
+    
     return Dict(
         :bimodality => bimodality,
-        :er_polarization => er_polarization,
-        :group_polarization => group_polarization,
-        :extremism => mean(abs.(beliefs))
+        :er_polarization => er_polarization, 
+        :group_separation => group_separation,
+        :fragmentation => fragmentation,
+        :extremism => mean(abs.(beliefs)),
+        :variance_ratio => var(beliefs) / (var(beliefs) + 1e-10)
     )
 end
 
-# ============================================================================ 
-# Synchronization metrics
-# ============================================================================ 
+# ============================================================================
+# Critical Point Analysis (Paper Section 4.1)
+# ============================================================================
 
-function synchronization_metrics(trajectory::Vector{Vector{Float64}})
-    T_steps = length(trajectory)
-    N = length(trajectory[1])
+function critical_peer_influence(consensus_data::Vector{Float64}, κ_values::Vector{Float64})
+    """
+    Estimate critical peer influence κ* from bifurcation data
+    """
+    # Find the point where consensus drops rapidly
+    consensus_gradient = diff(consensus_data)
     
-    # Order parameter (phase synchronization)
-    order_params = Float64[]
-    for t in 1:T_steps
-        beliefs = trajectory[t]
-        # Map beliefs to phases [0, 2π]
-        phases = 2π * (beliefs .- minimum(beliefs)) ./ (maximum(beliefs) - minimum(beliefs) + 1e-10)
+    # Look for largest negative gradient (steepest consensus drop)
+    critical_idx = argmin(consensus_gradient)
+    κ_star = κ_values[critical_idx]
+    
+    # Estimate confidence interval
+    gradient_threshold = quantile(abs.(consensus_gradient), 0.8)
+    critical_region = findall(abs.(consensus_gradient) .>= gradient_threshold)
+    
+    κ_confidence = if length(critical_region) > 1
+        (κ_values[minimum(critical_region)], κ_values[maximum(critical_region)])
+    else
+        (κ_star, κ_star)
+    end
+    
+    return Dict(
+        :κ_star => κ_star,
+        :confidence_interval => κ_confidence,
+        :critical_gradient => consensus_gradient[critical_idx],
+        :bifurcation_strength => abs(consensus_gradient[critical_idx])
+    )
+end
+
+function bifurcation_analysis(trajectories::Dict, κ_values::Vector{Float64})
+    """
+    Full bifurcation analysis across parameter range
+    """
+    consensus_vals = Float64[]
+    polarization_vals = Float64[]
+    stability_vals = Float64[]
+    
+    for traj in trajectories
+        final_beliefs = [traj[:beliefs][i][end] for i in 1:length(traj[:beliefs])]
         
-        # Complex order parameter
-        z = mean(exp.(im * phases))
-        push!(order_params, abs(z))
+        consensus_data = consensus_metrics(final_beliefs)
+        polarization_data = polarization_metrics(final_beliefs)
+        
+        push!(consensus_vals, consensus_data[:consensus_strength])
+        push!(polarization_vals, polarization_data[:group_separation])
+        
+        # Stability: variance of final portion of trajectory
+        final_window = max(1, length(traj[:beliefs][1]) - 20):length(traj[:beliefs][1])
+        belief_vars = [var([traj[:beliefs][i][t] for i in 1:length(traj[:beliefs])]) 
+                      for t in final_window]
+        push!(stability_vals, std(belief_vars))
     end
     
-    # Kuramoto order parameter time series
-    kuramoto_sync = mean(order_params[end-10:end])  # final synchronization
-    
-    # Pairwise correlations
-    belief_matrix = hcat(trajectory...)  # N × T matrix
-    correlations = cor(belief_matrix')   # correlation between agents
-    avg_correlation = mean(correlations[triu(ones(Bool, N, N), 1)])
+    # Identify critical point
+    critical_analysis = critical_peer_influence(consensus_vals, κ_values)
     
     return Dict(
-        :order_parameter_series => order_params,
-        :final_synchronization => kuramoto_sync,
-        :avg_pairwise_correlation => avg_correlation,
-        :correlation_matrix => correlations
+        :κ_values => κ_values,
+        :consensus => consensus_vals,
+        :polarization => polarization_vals,
+        :stability => stability_vals,
+        :critical_point => critical_analysis,
+        :supercritical => consensus_vals[end] < consensus_vals[1] * 0.5
     )
 end
 
-# ============================================================================ 
-# Phase space analysis
-# ============================================================================ 
+# ============================================================================
+# Regime Detection (Paper Section 6)
+# ============================================================================
 
-function phase_space_analysis(trajectory::Vector{Vector{Float64}}, dt::Float64)
-    T_steps = length(trajectory)
-    N = length(trajectory[1])
-    
-    # Compute velocities (discrete derivatives)
-    velocities = Vector{Vector{Float64}}()
-    for t in 2:T_steps
-        v = (trajectory[t] - trajectory[t-1]) / dt
-        push!(velocities, v)
-    end
-    
-    # Phase space points (position, velocity)
-    phase_points = [(trajectory[t], velocities[t-1]) for t in 2:T_steps]
-    
-    # Lyapunov exponent estimate (largest)
-    if length(velocities) > 10
-        # Simple estimate: log of velocity divergence
-        vel_norms = [norm(v) for v in velocities]
-        if all(vel_norms .> 1e-10)
-            lyapunov_est = mean(log.(vel_norms[2:end] ./ vel_norms[1:end-1])) / dt
-        else
-            lyapunov_est = -Inf
-        end
-    else
-        lyapunov_est = NaN
-    end
-    
-    return Dict(
-        :phase_points => phase_points,
-        :lyapunov_estimate => lyapunov_est,
-        :velocity_trajectory => velocities
-    )
-end
-
-# ============================================================================ 
-# Stability analysis
-# ============================================================================ 
-
-function stability_analysis(trajectory::Vector{Vector{Float64}}, equilibrium_window=10)
-    T_steps = length(trajectory)
-    
-    if T_steps < equilibrium_window + 1
-        return Dict(:stable => false, :equilibrium => NaN)
-    end
-    
-    # Check for equilibrium (small changes in final steps)
-    final_states = trajectory[end-equilibrium_window:end]
-    changes = [norm(final_states[i+1] - final_states[i]) for i in 1:equilibrium_window]
-    
-    max_change = maximum(changes)
-    is_stable = max_change < 0.01  # threshold for stability
-    
-    equilibrium_point = if is_stable
-        mean(final_states)
-    else
-        NaN
-    end
-    
-    return Dict(
-        :stable => is_stable,
-        :equilibrium => equilibrium_point,
-        :max_change => max_change,
-        :final_changes => changes
-    )
-end
-
-# ============================================================================ 
-# Entropy metrics
-# ============================================================================ 
-
-function entropy_metrics(beliefs::Vector{Float64}; bins=20)
-    # Discretize beliefs for entropy calculation
-    hist = fit(Histogram, beliefs, bins)
-    probs = hist.weights / sum(hist.weights)
-    probs = probs[probs .> 0]  # remove zero probabilities
-    
-    # Shannon entropy
-    shannon = -sum(probs .* log2.(probs))
-    
-    # Normalized entropy
-    max_entropy = log2(length(probs))
-    normalized_entropy = shannon / max_entropy
-    
-    # Gini coefficient (alternative inequality measure)
-    sorted_beliefs = sort(abs.(beliefs))
-    n = length(sorted_beliefs)
-    gini = if n > 1
-        sum((2*i - n - 1) * sorted_beliefs[i] for i in 1:n) / (n * sum(sorted_beliefs))
-    else
-        0.0
-    end
-    
-    return Dict(
-        :shannon_entropy => shannon,
-        :normalized_entropy => normalized_entropy,
-        :gini_coefficient => gini,
-        :effective_states => 2^shannon
-    )
-end
-
-# ============================================================================ 
-# Correlation analysis
-# ============================================================================ 
-
-function correlation_analysis(trajectory::Vector{Vector{Float64}}, lags::Vector{Int}=[1,2,5,10])
-    T_steps = length(trajectory)
-    N = length(trajectory[1])
-    
-    # Autocorrelation for each agent
-    autocorrs = Dict{Int, Vector{Float64}}()
-    
-    for lag in lags
-        if lag < T_steps
-            corr_vals = Float64[]
-            for i in 1:N
-                agent_series = [trajectory[t][i] for t in 1:T_steps]
-                if T_steps > lag + 1
-                    lag_corr = cor(agent_series[1:end-lag], agent_series[lag+1:end])
-                    push!(corr_vals, isnan(lag_corr) ? 0.0 : lag_corr)
-                end
-            end
-            autocorrs[lag] = corr_vals
-        end
-    end
-    
-    # Cross-correlation between agents
-    belief_matrix = hcat(trajectory...)  # N × T matrix
-    cross_corr = cor(belief_matrix')
-    
-    return Dict(
-        :autocorrelations => autocorrs,
-        :cross_correlations => cross_corr,
-        :mean_autocorr => Dict(lag => mean(vals) for (lag, vals) in autocorrs)
-    )
-end
-
-# ============================================================================ 
-# Network influence metrics
-# ============================================================================ 
-
-function network_influence_metrics(trajectory::Vector{Vector{Float64}}, W::AbstractMatrix)
-    T_steps = length(trajectory)
+function propagation_indicators(trajectories::Dict, W::AbstractMatrix)
+    """
+    Compute network mixing time and propagation conditions
+    """
     N = size(W, 1)
     
-    # Centrality measures
-    degrees = vec(sum(W .> 0, dims=2))
+    # Network mixing time (spectral gap approximation)
+    eigenvals = eigvals(W)
+    spectral_gap = 1.0 - maximum(real.(eigenvals[2:end]))  # Skip largest eigenvalue
+    mixing_time = spectral_gap > 1e-10 ? -1.0 / log(1.0 - spectral_gap) : Inf
     
-    # Influence of each agent on final consensus
-    final_beliefs = trajectory[end]
-    consensus = mean(final_beliefs)
+    # Fast mixing indicator
+    γ_net = mixing_time < 10.0 ? 1.0 : 0.0
     
-    # Agent influence = correlation with final consensus weighted by degree
-    influence_scores = Float64[]
-    for i in 1:N
-        agent_series = [trajectory[t][i] for t in 1:T_steps]
-        
-        # Influence = how much agent's trajectory predicts final consensus
-        # weighted by network centrality
-        if std(agent_series) > 1e-10
-            influence = abs(cor(agent_series, [mean(trajectory[t]) for t in 1:T_steps])) * degrees[i]
-        else
-            influence = 0.0
-        end
-        push!(influence_scores, isnan(influence) ? 0.0 : influence)
-    end
-    
-    # Network efficiency
-    distances = pairwise(Euclidean(), hcat(trajectory[end]...)')
-    avg_distance = mean(distances[triu(ones(Bool, N, N), 1)])
+    # Mass propagation indicator (based on belief variance)
+    final_beliefs = [trajectories[:beliefs][i][end] for i in 1:length(trajectories[:beliefs])]
+    belief_spread = std(final_beliefs)
+    critical_mass = 0.5  # Threshold for significant spread
+    γ_mass = belief_spread > critical_mass ? 1.0 : 0.0
     
     return Dict(
-        :influence_scores => influence_scores,
-        :top_influencers => sortperm(influence_scores, rev=true)[1:min(5, N)],
-        :network_efficiency => 1 / (1 + avg_distance),
-        :degree_centrality => degrees
+        :mixing_time => mixing_time,
+        :spectral_gap => spectral_gap,
+        :γ_net => γ_net,
+        :γ_mass => γ_mass,
+        :belief_spread => belief_spread
+    )
+end
+
+function detect_regime_transition(trajectories::Dict, W::AbstractMatrix, 
+                                params::ShiftDetectionPars=ShiftDetectionPars())
+    """
+    Classify behavioral regime following Paper Section 6
+    """
+    # Compute detection flags for each layer
+    shift_data = layer_shift_metrics(trajectories)
+    
+    # Detection thresholds (could be calibrated from data)
+    threshold_micro = 0.1
+    threshold_meso = 0.08
+    threshold_macro = 0.05
+    
+    μ_micro = maximum(shift_data[:micro]) > threshold_micro
+    μ_meso = maximum(shift_data[:meso]) > threshold_meso  
+    μ_macro = maximum(shift_data[:macro]) > threshold_macro
+    
+    detection_flags = Dict(
+        :micro => μ_micro,
+        :meso => μ_meso,
+        :macro => μ_macro
+    )
+    
+    # Compute propagation indicators
+    prop_indicators = propagation_indicators(trajectories, W)
+    
+    # Regime classification logic (Paper Table 1)
+    regime = if !μ_micro && !μ_meso && !μ_macro
+        Equilibrium
+    elseif μ_micro && μ_meso && !μ_macro && prop_indicators[:γ_net] == 0.0
+        Buffered
+    elseif !μ_micro && !μ_meso && μ_macro
+        Broadcast  
+    elseif μ_micro && μ_meso && μ_macro && prop_indicators[:γ_net] == 1.0 && prop_indicators[:γ_mass] == 1.0
+        Cascade
+    else
+        Equilibrium  # Default fallback
+    end
+    
+    # Confidence based on clarity of detection
+    confidence = if regime == Cascade
+        min(prop_indicators[:γ_net], prop_indicators[:γ_mass])
+    elseif regime == Buffered
+        1.0 - prop_indicators[:γ_net]
+    else
+        0.8  # Default confidence
+    end
+    
+    return RegimeClassification(regime, detection_flags, prop_indicators, confidence)
+end
+
+# ============================================================================
+# Advanced Analysis Functions
+# ============================================================================
+
+function multi_scale_analysis(trajectories::Dict, W::AbstractMatrix, t_vec::Vector{Float64})
+    """
+    Comprehensive multi-scale analysis combining all metrics
+    """
+    N = length(trajectories[:beliefs])
+    T_steps = length(trajectories[:beliefs][1])
+    
+    # Time series analysis
+    consensus_evolution = Float64[]
+    polarization_evolution = Float64[]
+    cognitive_load_evolution = Float64[]
+    
+    for t in 1:T_steps
+        # Extract beliefs at time t
+        beliefs_t = [trajectories[:beliefs][i][t] for i in 1:N]
+        
+        # Consensus metrics
+        consensus_data = consensus_metrics(beliefs_t)
+        push!(consensus_evolution, consensus_data[:consensus_strength])
+        
+        # Polarization metrics  
+        polarization_data = polarization_metrics(beliefs_t)
+        push!(polarization_evolution, polarization_data[:group_separation])
+        
+        # Average cognitive load (memory * deliberation * threshold)
+        if haskey(trajectories, :memory)
+            cognitive_load = mean([trajectories[:memory][i][t] * trajectories[:deliberation][i][t] * 
+                                  trajectories[:thresholds][i][t] for i in 1:N])
+            push!(cognitive_load_evolution, cognitive_load)
+        end
+    end
+    
+    # Regime detection
+    regime_classification = detect_regime_transition(trajectories, W)
+    
+    # Stability analysis
+    final_window = max(1, T_steps-20):T_steps
+    final_consensus = consensus_evolution[final_window]
+    is_stable = std(final_consensus) < 0.01
+    
+    return Dict(
+        :time_series => Dict(
+            :consensus => consensus_evolution,
+            :polarization => polarization_evolution,
+            :cognitive_load => cognitive_load_evolution
+        ),
+        :regime => regime_classification,
+        :stability => Dict(
+            :is_stable => is_stable,
+            :final_consensus => mean(final_consensus),
+            :consensus_volatility => std(final_consensus)
+        ),
+        :shift_metrics => layer_shift_metrics(trajectories),
+        :network_effects => propagation_indicators(trajectories, W)
+    )
+end
+
+function lyapunov_analysis(trajectories::Dict, dt::Float64=0.1)
+    """
+    Estimate largest Lyapunov exponent for stability analysis
+    """
+    beliefs_series = trajectories[:beliefs]
+    N = length(beliefs_series)
+    T = length(beliefs_series[1])
+    
+    if T < 50
+        return Dict(:lyapunov_exponent => NaN, :reliable => false)
+    end
+    
+    # Compute velocity (discrete derivative) for first agent
+    velocities = diff([beliefs_series[1][t] for t in 1:T]) ./ dt
+    
+    # Lyapunov exponent estimate
+    velocity_magnitudes = abs.(velocities)
+    valid_velocities = velocity_magnitudes[velocity_magnitudes .> 1e-12]
+    
+    if length(valid_velocities) < 10
+        return Dict(:lyapunov_exponent => NaN, :reliable => false)
+    end
+    
+    # Log-average growth rate
+    lyapunov_est = mean(log.(valid_velocities[2:end] ./ valid_velocities[1:end-1])) / dt
+    
+    return Dict(
+        :lyapunov_exponent => lyapunov_est,
+        :reliable => length(valid_velocities) > 20,
+        :stability_class => lyapunov_est < 0 ? :stable : :unstable
+    )
+end
+
+function mean_field_analysis(trajectories_ensemble::Vector, κ_values::Vector{Float64})
+    """
+    Analyze convergence to mean-field limit across ensemble
+    """
+    ensemble_size = length(trajectories_ensemble)
+    
+    # Compute empirical distribution evolution
+    consensus_trajectories = []
+    
+    for traj_data in trajectories_ensemble
+        traj = traj_data.trajectories
+        T_steps = length(traj[:beliefs][1])
+        consensus_t = [consensus_metrics([traj[:beliefs][i][t] for i in 1:length(traj[:beliefs])])[:consensus_strength] 
+                      for t in 1:T_steps]
+        push!(consensus_trajectories, consensus_t)
+    end
+    
+    # Mean-field limit (ensemble average)
+    T_steps = length(consensus_trajectories[1])
+    mean_field_consensus = [mean([traj[t] for traj in consensus_trajectories]) for t in 1:T_steps]
+    mean_field_variance = [var([traj[t] for traj in consensus_trajectories]) for t in 1:T_steps]
+    
+    # Convergence rate (should be O(N^{-1/2}))
+    N = length(trajectories_ensemble[1].trajectories[:beliefs])
+    theoretical_variance = 1.0 / N
+    empirical_variance = mean(mean_field_variance[end-10:end])  # Final variance
+    
+    convergence_rate = empirical_variance > 0 ? sqrt(theoretical_variance / empirical_variance) : NaN
+    
+    return Dict(
+        :mean_field_trajectory => mean_field_consensus,
+        :variance_trajectory => mean_field_variance,
+        :convergence_rate => convergence_rate,
+        :n_realizations => ensemble_size,
+        :theoretical_rate => 1.0 / sqrt(N)
     )
 end
 
