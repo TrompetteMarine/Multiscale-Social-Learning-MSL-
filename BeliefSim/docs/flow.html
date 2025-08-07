@@ -1,0 +1,237 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Title -->
+  <text x="600" y="30" font-size="24" font-weight="bold" text-anchor="middle" fill="#2c3e50">
+    BeliefSim Architecture &amp; Analysis Flow
+  </text>
+  
+  <!-- Core Engine Section -->
+  <g id="core-engine">
+    <rect x="50" y="60" width="300" height="320" fill="#e8f4f8" stroke="#3498db" stroke-width="2" rx="10"/>
+    <text x="200" y="85" font-size="18" font-weight="bold" text-anchor="middle" fill="#2c3e50">Core Simulation Engine</text>
+    
+    <!-- Core modules -->
+    <rect x="70" y="100" width="120" height="35" fill="#3498db" rx="5"/>
+    <text x="130" y="122" font-size="14" text-anchor="middle" fill="white">agents.jl</text>
+    <text x="130" y="133" font-size="10" text-anchor="middle" fill="#e0e0e0">5D state dynamics</text>
+    
+    <rect x="210" y="100" width="120" height="35" fill="#3498db" rx="5"/>
+    <text x="270" y="122" font-size="14" text-anchor="middle" fill="white">networks.jl</text>
+    <text x="270" y="133" font-size="10" text-anchor="middle" fill="#e0e0e0">Topology generation</text>
+    
+    <rect x="70" y="150" width="120" height="35" fill="#3498db" rx="5"/>
+    <text x="130" y="172" font-size="14" text-anchor="middle" fill="white">simulation.jl</text>
+    <text x="130" y="183" font-size="10" text-anchor="middle" fill="#e0e0e0">Jump-diffusion SDE</text>
+    
+    <rect x="210" y="150" width="120" height="35" fill="#3498db" rx="5"/>
+    <text x="270" y="172" font-size="14" text-anchor="middle" fill="white">metrics.jl</text>
+    <text x="270" y="183" font-size="10" text-anchor="middle" fill="#e0e0e0">Basic analysis</text>
+    
+    <rect x="140" y="200" width="120" height="35" fill="#2980b9" rx="5"/>
+    <text x="200" y="222" font-size="14" text-anchor="middle" fill="white">BeliefSim.jl</text>
+    <text x="200" y="233" font-size="10" text-anchor="middle" fill="#e0e0e0">Main coordinator</text>
+    
+    <!-- Parameters -->
+    <rect x="70" y="250" width="260" height="110" fill="#ffffff" stroke="#95a5a6" stroke-width="1" rx="5"/>
+    <text x="200" y="270" font-size="12" font-weight="bold" text-anchor="middle" fill="#2c3e50">MSLParams</text>
+    <text x="80" y="290" font-size="10" fill="#7f8c8d">• N agents, T time horizon</text>
+    <text x="80" y="305" font-size="10" fill="#7f8c8d">• Cognitive: λ, α, σ, δm, ηw, βΘ</text>
+    <text x="80" y="320" font-size="10" fill="#7f8c8d">• Network: type, parameters</text>
+    <text x="80" y="335" font-size="10" fill="#7f8c8d">• Jump intensity: ν</text>
+    <text x="80" y="350" font-size="10" fill="#7f8c8d">• Numerical: Δt, save_interval</text>
+  </g>
+  
+  <!-- Advanced Analysis Section -->
+  <g id="advanced-analysis">
+    <rect x="400" y="60" width="350" height="320" fill="#f0f9ff" stroke="#2ecc71" stroke-width="2" rx="10"/>
+    <text x="575" y="85" font-size="18" font-weight="bold" text-anchor="middle" fill="#2c3e50">Advanced Analysis Suite</text>
+    
+    <!-- Advanced modules -->
+    <rect x="420" y="100" width="140" height="40" fill="#27ae60" rx="5"/>
+    <text x="490" y="118" font-size="12" text-anchor="middle" fill="white">advanced_analysis.jl</text>
+    <text x="490" y="132" font-size="9" text-anchor="middle" fill="#e0e0e0">Phase diagrams, bifurcations</text>
+    
+    <rect x="580" y="100" width="140" height="40" fill="#27ae60" rx="5"/>
+    <text x="650" y="118" font-size="12" text-anchor="middle" fill="white">integration_patch.jl</text>
+    <text x="650" y="132" font-size="9" text-anchor="middle" fill="#e0e0e0">Bridge to simulation</text>
+    
+    <rect x="420" y="155" width="140" height="40" fill="#27ae60" rx="5"/>
+    <text x="490" y="173" font-size="12" text-anchor="middle" fill="white">ensemble.jl</text>
+    <text x="490" y="187" font-size="9" text-anchor="middle" fill="#e0e0e0">Multi-run management</text>
+    
+    <rect x="580" y="155" width="140" height="40" fill="#27ae60" rx="5"/>
+    <text x="650" y="173" font-size="12" text-anchor="middle" fill="white">basin_analysis.jl</text>
+    <text x="650" y="187" font-size="9" text-anchor="middle" fill="#e0e0e0">Attractor mapping</text>
+    
+    <!-- Analysis capabilities -->
+    <rect x="420" y="210" width="300" height="150" fill="#ffffff" stroke="#95a5a6" stroke-width="1" rx="5"/>
+    <text x="570" y="230" font-size="12" font-weight="bold" text-anchor="middle" fill="#2c3e50">Analysis Capabilities</text>
+    <text x="430" y="250" font-size="10" fill="#27ae60">✓ 2D/3D Phase diagrams</text>
+    <text x="430" y="265" font-size="10" fill="#27ae60">✓ Bifurcation with continuation</text>
+    <text x="430" y="280" font-size="10" fill="#27ae60">✓ Basin of attraction mapping</text>
+    <text x="430" y="295" font-size="10" fill="#27ae60">✓ Monte Carlo exploration</text>
+    <text x="430" y="310" font-size="10" fill="#27ae60">✓ Stability analysis (Lyapunov)</text>
+    <text x="430" y="325" font-size="10" fill="#27ae60">✓ Regime classification</text>
+    <text x="430" y="340" font-size="10" fill="#27ae60">✓ Sensitivity analysis</text>
+    <text x="430" y="355" font-size="10" fill="#27ae60">✓ Rare event detection</text>
+  </g>
+  
+  <!-- Analysis Layers -->
+  <g id="analysis-layers">
+    <rect x="50" y="420" width="1100" height="350" fill="#fff9e6" stroke="#f39c12" stroke-width="2" rx="10"/>
+    <text x="600" y="445" font-size="18" font-weight="bold" text-anchor="middle" fill="#2c3e50">Progressive Analysis Layers</text>
+    
+    <!-- Layer 1 -->
+    <g>
+      <rect x="70" y="470" width="180" height="120" fill="#ffe6e6" stroke="#e74c3c" stroke-width="2" rx="8"/>
+      <text x="160" y="490" font-size="14" font-weight="bold" text-anchor="middle" fill="#c0392b">Layer 1: Exploratory</text>
+      <text x="80" y="510" font-size="10" fill="#2c3e50">Time: Minutes</text>
+      <text x="80" y="525" font-size="10" fill="#2c3e50">• Single simulations</text>
+      <text x="80" y="540" font-size="10" fill="#2c3e50">• Quick parameter tests</text>
+      <text x="80" y="555" font-size="10" fill="#2c3e50">• Basic visualizations</text>
+      <text x="80" y="570" font-size="10" fill="#2c3e50">• Hypothesis generation</text>
+      <rect x="90" y="575" width="140" height="10" fill="#e74c3c" rx="2"/>
+    </g>
+    
+    <!-- Layer 2 -->
+    <g>
+      <rect x="270" y="470" width="180" height="120" fill="#ffe6cc" stroke="#e67e22" stroke-width="2" rx="8"/>
+      <text x="360" y="490" font-size="14" font-weight="bold" text-anchor="middle" fill="#d35400">Layer 2: Statistical</text>
+      <text x="280" y="510" font-size="10" fill="#2c3e50">Time: Hours</text>
+      <text x="280" y="525" font-size="10" fill="#2c3e50">• Ensemble runs (100s)</text>
+      <text x="280" y="540" font-size="10" fill="#2c3e50">• Confidence intervals</text>
+      <text x="280" y="555" font-size="10" fill="#2c3e50">• Variance analysis</text>
+      <text x="280" y="570" font-size="10" fill="#2c3e50">• Statistical tests</text>
+      <rect x="290" y="575" width="140" height="10" fill="#e67e22" rx="2"/>
+    </g>
+    
+    <!-- Layer 3 -->
+    <g>
+      <rect x="470" y="470" width="180" height="120" fill="#fff9cc" stroke="#f1c40f" stroke-width="2" rx="8"/>
+      <text x="560" y="490" font-size="14" font-weight="bold" text-anchor="middle" fill="#f39c12">Layer 3: Parametric</text>
+      <text x="480" y="510" font-size="10" fill="#2c3e50">Time: Hours-Days</text>
+      <text x="480" y="525" font-size="10" fill="#2c3e50">• Phase diagrams</text>
+      <text x="480" y="540" font-size="10" fill="#2c3e50">• Parameter sweeps</text>
+      <text x="480" y="555" font-size="10" fill="#2c3e50">• Critical regions</text>
+      <text x="480" y="570" font-size="10" fill="#2c3e50">• Regime mapping</text>
+      <rect x="490" y="575" width="140" height="10" fill="#f1c40f" rx="2"/>
+    </g>
+    
+    <!-- Layer 4 -->
+    <g>
+      <rect x="670" y="470" width="180" height="120" fill="#e6ffe6" stroke="#27ae60" stroke-width="2" rx="8"/>
+      <text x="760" y="490" font-size="14" font-weight="bold" text-anchor="middle" fill="#229954">Layer 4: Mathematical</text>
+      <text x="680" y="510" font-size="10" fill="#2c3e50">Time: Days</text>
+      <text x="680" y="525" font-size="10" fill="#2c3e50">• Bifurcation analysis</text>
+      <text x="680" y="540" font-size="10" fill="#2c3e50">• Continuation methods</text>
+      <text x="680" y="555" font-size="10" fill="#2c3e50">• Stability analysis</text>
+      <text x="680" y="570" font-size="10" fill="#2c3e50">• Normal forms</text>
+      <rect x="690" y="575" width="140" height="10" fill="#27ae60" rx="2"/>
+    </g>
+    
+    <!-- Layer 5 -->
+    <g>
+      <rect x="870" y="470" width="180" height="120" fill="#e6e6ff" stroke="#3498db" stroke-width="2" rx="8"/>
+      <text x="960" y="490" font-size="14" font-weight="bold" text-anchor="middle" fill="#2874a6">Layer 5: Global</text>
+      <text x="880" y="510" font-size="10" fill="#2c3e50">Time: Days-Weeks</text>
+      <text x="880" y="525" font-size="10" fill="#2c3e50">• Basin mapping</text>
+      <text x="880" y="540" font-size="10" fill="#2c3e50">• Monte Carlo (1000s)</text>
+      <text x="880" y="555" font-size="10" fill="#2c3e50">• Rare events</text>
+      <text x="880" y="570" font-size="10" fill="#2c3e50">• Complete dynamics</text>
+      <rect x="890" y="575" width="140" height="10" fill="#3498db" rx="2"/>
+    </g>
+    
+    <!-- Progressive arrows -->
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#7f8c8d"/>
+      </marker>
+    </defs>
+    
+    <line x1="250" y1="530" x2="270" y2="530" stroke="#7f8c8d" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <line x1="450" y1="530" x2="470" y2="530" stroke="#7f8c8d" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <line x1="650" y1="530" x2="670" y2="530" stroke="#7f8c8d" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <line x1="850" y1="530" x2="870" y2="530" stroke="#7f8c8d" stroke-width="2" marker-end="url(#arrowhead)"/>
+    
+    <!-- Computational requirements -->
+    <rect x="70" y="610" width="980" height="140" fill="#f8f9fa" stroke="#95a5a6" stroke-width="1" rx="5"/>
+    <text x="560" y="630" font-size="12" font-weight="bold" text-anchor="middle" fill="#2c3e50">Computational Requirements</text>
+    
+    <text x="160" y="650" font-size="10" text-anchor="middle" fill="#2c3e50">CPU: 1 core</text>
+    <text x="160" y="665" font-size="10" text-anchor="middle" fill="#2c3e50">RAM: &lt;1 GB</text>
+    <text x="160" y="680" font-size="10" text-anchor="middle" fill="#2c3e50">Time: &lt;1 min</text>
+    
+    <text x="360" y="650" font-size="10" text-anchor="middle" fill="#2c3e50">CPU: 1-4 cores</text>
+    <text x="360" y="665" font-size="10" text-anchor="middle" fill="#2c3e50">RAM: 2-4 GB</text>
+    <text x="360" y="680" font-size="10" text-anchor="middle" fill="#2c3e50">Time: 10-60 min</text>
+    
+    <text x="560" y="650" font-size="10" text-anchor="middle" fill="#2c3e50">CPU: 4-8 cores</text>
+    <text x="560" y="665" font-size="10" text-anchor="middle" fill="#2c3e50">RAM: 4-8 GB</text>
+    <text x="560" y="680" font-size="10" text-anchor="middle" fill="#2c3e50">Time: 2-12 hrs</text>
+    
+    <text x="760" y="650" font-size="10" text-anchor="middle" fill="#2c3e50">CPU: 8-16 cores</text>
+    <text x="760" y="665" font-size="10" text-anchor="middle" fill="#2c3e50">RAM: 8-16 GB</text>
+    <text x="760" y="680" font-size="10" text-anchor="middle" fill="#2c3e50">Time: 6-24 hrs</text>
+    
+    <text x="960" y="650" font-size="10" text-anchor="middle" fill="#2c3e50">CPU: 16-32 cores</text>
+    <text x="960" y="665" font-size="10" text-anchor="middle" fill="#2c3e50">RAM: 16-32 GB</text>
+    <text x="960" y="680" font-size="10" text-anchor="middle" fill="#2c3e50">Time: 1-7 days</text>
+    
+    <!-- Use case indicators -->
+    <text x="160" y="710" font-size="9" text-anchor="middle" fill="#e74c3c" font-style="italic">Quick insights</text>
+    <text x="360" y="710" font-size="9" text-anchor="middle" fill="#e67e22" font-style="italic">Publications</text>
+    <text x="560" y="710" font-size="9" text-anchor="middle" fill="#f39c12" font-style="italic">Critical regions</text>
+    <text x="760" y="710" font-size="9" text-anchor="middle" fill="#27ae60" font-style="italic">Theory validation</text>
+    <text x="960" y="710" font-size="9" text-anchor="middle" fill="#3498db" font-style="italic">Complete understanding</text>
+    
+    <text x="560" y="740" font-size="10" text-anchor="middle" fill="#7f8c8d" font-style="italic">
+      Choose depth based on research question and available resources
+    </text>
+  </g>
+  
+  <!-- Output section -->
+  <g id="outputs">
+    <rect x="800" y="60" width="350" height="320" fill="#fef5e7" stroke="#f39c12" stroke-width="2" rx="10"/>
+    <text x="975" y="85" font-size="18" font-weight="bold" text-anchor="middle" fill="#2c3e50">Outputs &amp; Visualizations</text>
+    
+    <!-- Output types -->
+    <rect x="820" y="100" width="310" height="260" fill="#ffffff" stroke="#95a5a6" stroke-width="1" rx="5"/>
+    
+    <text x="830" y="120" font-size="11" font-weight="bold" fill="#2c3e50">📊 Data Outputs:</text>
+    <text x="840" y="135" font-size="10" fill="#34495e">• Trajectory data (.csv, .jld2)</text>
+    <text x="840" y="150" font-size="10" fill="#34495e">• Statistical summaries</text>
+    <text x="840" y="165" font-size="10" fill="#34495e">• Parameter sensitivity matrices</text>
+    
+    <text x="830" y="185" font-size="11" font-weight="bold" fill="#2c3e50">📈 Visualizations:</text>
+    <text x="840" y="200" font-size="10" fill="#34495e">• Belief evolution plots</text>
+    <text x="840" y="215" font-size="10" fill="#34495e">• Phase diagrams (2D/3D)</text>
+    <text x="840" y="230" font-size="10" fill="#34495e">• Bifurcation diagrams</text>
+    <text x="840" y="245" font-size="10" fill="#34495e">• Basin portraits</text>
+    <text x="840" y="260" font-size="10" fill="#34495e">• Correlation heatmaps</text>
+    
+    <text x="830" y="280" font-size="11" font-weight="bold" fill="#2c3e50">📑 Reports:</text>
+    <text x="840" y="295" font-size="10" fill="#34495e">• Regime classification</text>
+    <text x="840" y="310" font-size="10" fill="#34495e">• Critical point identification</text>
+    <text x="840" y="325" font-size="10" fill="#34495e">• Stability analysis</text>
+    <text x="840" y="340" font-size="10" fill="#34495e">• Parameter importance ranking</text>
+    <text x="840" y="355" font-size="10" fill="#34495e">• Summary statistics</text>
+  </g>
+  
+  <!-- Connections -->
+  <line x1="350" y1="220" x2="400" y2="220" stroke="#34495e" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="575" y1="380" x2="575" y2="420" stroke="#34495e" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="750" y1="220" x2="800" y2="220" stroke="#34495e" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- Legend -->
+  <g id="legend">
+    <rect x="1070" y="470" width="100" height="120" fill="#ffffff" stroke="#95a5a6" stroke-width="1" rx="5"/>
+    <text x="1120" y="490" font-size="11" font-weight="bold" text-anchor="middle" fill="#2c3e50">Legend</text>
+    <rect x="1080" y="500" width="15" height="10" fill="#3498db"/>
+    <text x="1100" y="509" font-size="9" fill="#2c3e50">Core</text>
+    <rect x="1080" y="520" width="15" height="10" fill="#27ae60"/>
+    <text x="1100" y="529" font-size="9" fill="#2c3e50">Advanced</text>
+    <rect x="1080" y="540" width="15" height="10" fill="#f39c12"/>
+    <text x="1100" y="549" font-size="9" fill="#2c3e50">Output</text>
+    <rect x="1080" y="560" width="15" height="10" fill="#e74c3c"/>
+    <text x="1100" y="569" font-size="9" fill="#2c3e50">Analysis</text>
+  </g>
+</svg>
