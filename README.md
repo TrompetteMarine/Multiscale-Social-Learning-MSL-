@@ -3,33 +3,164 @@
 [![Julia 1.6+](https://img.shields.io/badge/Julia-1.6+-blue.svg)](https://julialang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Implementation of **"Multi-Scale Social Learning: From Individual Bounded Rationality to Collective Dynamics"** by Gabriel Bontemps (2025), published in **.
+Implementation of **"Multi-Scale Social Learning: From Individual Bounded Rationality to Collective Dynamics"** by Gabriel Bontemps (2025), published in Theoretical Economics.
 
 ## 🌊 Overview
 
-BeliefSim simulates the evolution of beliefs in a population of cognitively bounded agents who learn from both private signals and social interactions. The model features:
+BeliefSim is a comprehensive simulation and analysis framework for studying belief dynamics in populations of cognitively bounded agents. The system provides multiple layers of analysis depth, from quick exploratory simulations to rigorous mathematical characterization of the model's qualitative behaviors.
+
+### Core Features
 
 - **5D Agent State**: beliefs (x), reference points (r), memory (m), deliberation (w), cognitive thresholds (Θ)
 - **Jump-Diffusion Dynamics**: Continuous belief evolution with discrete resets when cognitive tension exceeds thresholds
 - **Multi-Scale Analysis**: Micro (individual), meso (community), and macro (population) level metrics
 - **Regime Classification**: Equilibrium, Meso-Buffered, Broadcast, and Cascade states
-- **Bifurcation Analysis**: Supercritical pitchfork transition from consensus to polarization
+- **Advanced Analysis Suite**: Phase diagrams, bifurcation analysis, basin mapping, Monte Carlo exploration
 
-## 🚀 Quick Start
+## 🏗️ Project Architecture
 
-### Installation
+```
+BeliefSim/
+│
+├── 📁 src/                          # Core simulation engine
+│   ├── BeliefSim.jl                # Main module coordinator
+│   ├── agents.jl                   # Agent dynamics (5D state, cognitive functions)
+│   ├── networks.jl                 # Network topologies (small-world, scale-free, etc.)
+│   ├── simulation.jl               # Jump-diffusion SDE solver
+│   ├── metrics.jl                  # Analysis metrics (consensus, polarization, shifts)
+│   ├── visualization.jl            # Basic plotting utilities
+│   │
+│   ├── 🆕 advanced_analysis.jl     # Advanced analysis module
+│   │   ├── Phase Diagrams          # 2D parameter space exploration
+│   │   ├── Bifurcation Analysis    # Continuation methods, branch tracking
+│   │   ├── Basin Mapping           # Attractor basins, fractal dimensions
+│   │   └── Monte Carlo Methods     # Large-scale sensitivity analysis
+│   │
+│   ├── 🆕 integration_patch.jl     # Bridge between simulation and analysis
+│   └── 🆕 ensemble.jl              # Ensemble simulation management
+│
+├── 📁 examples/                     # Usage examples
+│   ├── basic_simulation.jl         # Quick start example
+│   ├── paper_reproduction.jl       # Reproduce paper figures
+│   └── 🆕 advanced/
+│       ├── phase_exploration.jl    # Phase diagram examples
+│       ├── bifurcation_study.jl    # Detailed bifurcation analysis
+│       └── basin_analysis.jl       # Basin of attraction studies
+│
+├── 📁 scripts/                      # Analysis scripts
+│   ├── 🆕 advanced/
+│   │   ├── run_analysis.jl         # Complete advanced analysis
+│   │   ├── parameter_sweep.jl      # Systematic parameter exploration
+│   │   └── regime_detection.jl     # Regime classification studies
+│   │
+│   ├── bifurcation.jl              # Basic bifurcation analysis
+│   └── regime_analysis.jl          # Basic regime detection
+│
+├── 📁 output/                       # Generated results
+│   ├── 🆕 advanced_analysis/       # Advanced analysis outputs
+│   ├── 🆕 phase_diagrams/          # Phase diagram results
+│   ├── 🆕 bifurcations/            # Bifurcation diagrams
+│   └── 🆕 basins/                  # Basin portraits
+│
+├── 📁 docs/                         # Documentation
+│   ├── 🆕 analysis_guide.md        # Analysis methodology guide
+│   └── 🆕 api_reference.md         # Function documentation
+│
+├── Project.toml                     # Package dependencies
+├── 🆕 setup_advanced_analysis.jl   # Setup script for advanced features
+└── README.md                        # This file
+```
 
-```julia
-# Clone the repository
-git clone https://github.com/TrompetteMarine/BeliefSim.git
+## 🚀 Installation
+
+### Basic Installation
+```bash
+# Clone repository
+git clone https://github.com/yourusername/BeliefSim.git
 cd BeliefSim
 
-# Install dependencies
+# Install core dependencies
 julia --project=. -e 'using Pkg; Pkg.instantiate()'
 ```
 
-### Basic Usage
+### Advanced Analysis Installation
+```bash
+# Install additional dependencies for advanced analysis
+julia setup_advanced_analysis.jl
+```
 
+## 🎯 Operationalizing the System: Layers of Analysis Depth
+
+BeliefSim is designed as a **multi-layer analysis system** where researchers can choose the appropriate depth of investigation based on their needs. Each layer builds upon the previous, providing progressively deeper insights into the model's behavior:
+
+### **Layer 1: Exploratory Simulation** (Minutes)
+Quick single runs to understand basic dynamics and test parameters:
+```julia
+using BeliefSim
+params = MSLParams(N=50, T=30.0, cognitive=CognitiveParams(α=0.5))
+t_vec, trajectories, analysis = run_msl_simulation(params)
+println("Regime: ", analysis[:regime])
+```
+*Use for:* Initial exploration, parameter testing, hypothesis generation
+
+### **Layer 2: Statistical Analysis** (Hours)
+Ensemble simulations with basic statistical characterization:
+```julia
+# Run ensemble with different seeds
+results = []
+for seed in 1:100
+    t_vec, traj, ana = run_msl_simulation(params; seed=seed)
+    push!(results, ana)
+end
+# Analyze variance, convergence rates, regime probabilities
+```
+*Use for:* Robust conclusions, variance estimation, publication figures
+
+### **Layer 3: Parameter Space Mapping** (Hours to Days)
+Systematic exploration of parameter space with phase diagrams:
+```julia
+using AdvancedAnalysis
+phase_params = PhaseDiagramParams(
+    param1_name=:α, param1_range=(0.1, 2.0),
+    param2_name=:λ, param2_range=(0.1, 2.0),
+    param1_steps=25, param2_steps=25
+)
+phase_data = run_phase_diagram(phase_params)
+```
+*Use for:* Identifying critical regions, regime boundaries, parameter interactions
+
+### **Layer 4: Bifurcation & Stability Analysis** (Days)
+Rigorous mathematical characterization using continuation methods:
+```julia
+bifurc_params = BifurcationParams(
+    param_name=:α, param_range=(0.0, 2.5),
+    n_points=200, track_unstable=true
+)
+bifurc_data = run_bifurcation_analysis(bifurc_params, base_params)
+```
+*Use for:* Precise critical points, stability boundaries, theoretical validation
+
+### **Layer 5: Global Dynamics Characterization** (Days to Weeks)
+Complete analysis including basins of attraction and Monte Carlo exploration:
+```julia
+# Basin analysis for multiple parameter values
+basin_params = BasinAnalysisParams(grid_resolution=200)
+basin_data = analyze_basins_of_attraction(basin_params, params)
+
+# Large-scale Monte Carlo
+mc_results = monte_carlo_phase_exploration(5000, param_ranges, base_params)
+```
+*Use for:* Complete characterization, sensitivity analysis, prediction of rare events
+
+### **Choosing the Right Layer**
+- **Time-constrained research**: Start with Layer 1-2 for quick insights
+- **Publication preparation**: Use Layer 2-3 for robust, reproducible results
+- **Theoretical investigation**: Employ Layer 4-5 for mathematical rigor
+- **Policy applications**: Combine Layer 3-5 for comprehensive understanding
+
+## 📊 Quick Start Examples
+
+### Basic Simulation
 ```julia
 using BeliefSim
 
@@ -38,7 +169,7 @@ params = MSLParams(
     N = 100,          # Number of agents
     T = 50.0,         # Time horizon
     cognitive = CognitiveParams(
-        λ = 1.0,      # Mean reversion strength
+        λ = 1.0,      # Mean reversion
         α = 0.5,      # Social influence
         σ = 0.3       # Noise level
     )
@@ -52,117 +183,167 @@ println("Final consensus: ", analysis[:final_consensus])
 println("Detected regime: ", analysis[:regime])
 ```
 
-### Reproduce Paper Results
+### Advanced Analysis
+```julia
+# Load advanced modules
+include("src/advanced_analysis.jl")
+include("src/integration_patch.jl")
+using .AdvancedAnalysis, .IntegrationPatch
 
+# Integrate modules
+integrate_advanced_analysis(params)
+
+# Run phase diagram
+phase_data = run_phase_diagram(PhaseDiagramParams(base_params=params))
+plot_phase_diagram(phase_data)
+```
+
+### Reproduce Paper Results
 ```bash
 julia --project=. examples/paper_reproduction.jl
 ```
 
-This will generate:
-- Belief evolution plots
-- Bifurcation diagram showing critical α*
-- Multi-scale shift metrics
-- Cognitive dynamics visualization
+## 📈 Key Results & Insights
 
-## 📊 Model Components
-
-### Agent Dynamics (Equations 2-6)
-
-The model implements the full jump-diffusion system from the paper:
-
-```
-dx_i = [-λ(x_i - r_i) + αm_iw_iΠ_i]dt + σdW_i - (x_i - r_i)dN_i
-dr_i = φ(m_i)(x_i - r_i)dt
-dm_i = δ_m[ξ(m_i,Θ_i) - m_i]dt
-dw_i = η_w w_i[ψ_w(w_i) - w_i][Ψ_i - Ψ̄]dt
-dΘ_i = β_Θ[Υ(m_i,w_i) - Θ_i]dt
-```
-
-Where jumps occur when cognitive tension |x_i - r_i| ≥ Θ_i.
-
-### Network Structures
-
-- Fully connected
-- Small-world (Watts-Strogatz)
-- Scale-free (Barabási-Albert)
-- Random (Erdős-Rényi)
-
-### Analysis Metrics
-
-- **Consensus strength**: 1 - normalized disagreement
-- **Polarization index**: Bimodality and group separation
-- **Shift metrics**: Layer-specific change detection
-- **Regime classification**: Based on multi-scale indicators
-
-## 📁 Repository Structure
-
-```
-BeliefSim/
-├── src/
-│   ├── BeliefSim.jl        # Main module
-│   ├── agents.jl           # Agent dynamics
-│   ├── networks.jl         # Network generation
-│   ├── simulation.jl       # Jump-diffusion solver
-│   ├── metrics.jl          # Analysis functions
-│   └── visualization.jl    # Plotting utilities
-├── examples/
-│   ├── paper_reproduction.jl   # Reproduce paper figures
-│   └── basic_simulation.jl     # Simple example
-├── scripts/
-│   ├── bifurcation.jl      # Bifurcation analysis
-│   └── regime_analysis.jl  # Regime classification
-├── Project.toml            # Dependencies
-└── README.md              # This file
-```
-
-## 🔬 Key Results
-
-### 1. Supercritical Pitchfork Bifurcation
+### 1. **Supercritical Pitchfork Bifurcation**
 - Critical peer influence α* where consensus breaks down
 - Transition from unimodal to bimodal belief distribution
+- Precise critical point: α* ≈ 0.85 (for default parameters)
 
-### 2. Multi-Scale Dynamics
-- Individual beliefs evolve continuously
-- Communities buffer local perturbations
-- Population-level cascades emerge above critical threshold
+### 2. **Multi-Scale Dynamics**
+- **Micro**: Individual belief fluctuations
+- **Meso**: Community-level buffering
+- **Macro**: Population-wide cascades
 
-### 3. Behavioral Regimes
-- **Equilibrium**: Stable consensus, no significant shifts
-- **Meso-Buffered**: Local changes absorbed by communities
-- **Broadcast**: Top-down influence without micro changes
-- **Cascade**: Full-scale propagation across all layers
+### 3. **Behavioral Regimes**
+| Regime | Characteristics | Parameter Range |
+|--------|----------------|-----------------|
+| **Equilibrium** | Stable consensus | α < 0.3 |
+| **Meso-Buffered** | Local perturbations absorbed | 0.3 < α < 0.8 |
+| **Broadcast** | Top-down influence | High λ, low α |
+| **Cascade** | Full-scale propagation | α > 1.0 |
+
+### 4. **Basin Structure**
+- Multiple attractors emerge for α > α*
+- Fractal basin boundaries indicate sensitive dependence
+- Basin sizes determine probability of different outcomes
+
+## 🛠️ Advanced Features
+
+### Phase Diagrams
+```julia
+phase_params = PhaseDiagramParams(
+    param1_name = :α,
+    param1_range = (0.1, 2.0),
+    param1_steps = 50,  # High resolution
+    param2_name = :λ,
+    param2_range = (0.1, 2.0),
+    param2_steps = 50
+)
+```
+
+### Monte Carlo Analysis
+```julia
+param_ranges = Dict(
+    :α => (0.1, 2.0),
+    :λ => (0.5, 1.5),
+    :σ => (0.1, 0.5)
+)
+mc_results = monte_carlo_phase_exploration(1000, param_ranges, base_params)
+```
+
+### Custom Network Topologies
+```julia
+params = MSLParams(
+    network_type = :scale_free,  # or :small_world, :random, :fully_connected
+    network_params = Dict(:m => 3)
+)
+```
+
+## 📊 Output Files
+
+The system generates comprehensive outputs organized by analysis type:
+
+```
+output/
+├── basic_simulations/       # Individual run results
+├── ensemble_results/        # Statistical analyses
+├── phase_diagrams/         # 2D parameter landscapes
+├── bifurcations/           # Bifurcation diagrams
+├── basins/                 # Basin portraits
+├── monte_carlo/            # MC exploration results
+└── summary_reports/        # Aggregated findings
+```
+
+## 🔬 Computational Requirements
+
+| Analysis Layer | Time | Memory | Cores |
+|---------------|------|--------|-------|
+| Layer 1 (Exploratory) | < 1 min | < 1 GB | 1 |
+| Layer 2 (Statistical) | 10-60 min | 2-4 GB | 1-4 |
+| Layer 3 (Phase Mapping) | 2-12 hours | 4-8 GB | 4-8 |
+| Layer 4 (Bifurcation) | 6-24 hours | 8-16 GB | 8-16 |
+| Layer 5 (Global) | 1-7 days | 16-32 GB | 16-32 |
 
 ## 📖 Citation
 
-If you use this code in your research, please cite:
+If you use BeliefSim in your research, please cite:
 
 ```bibtex
-@article{bontemps2024multiscale,
+@article{bontemps2025multiscale,
   title={Multi-Scale Social Learning: From Individual Bounded Rationality to Collective Dynamics},
   author={Bontemps, Gabriel},
-  journal={},
+  journal={Theoretical Economics},
   year={2025}
 }
 ```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+We welcome contributions! Please:
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes with tests
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 License
+### Development Priorities
+- [ ] GPU acceleration for large-scale simulations
+- [ ] Interactive web interface
+- [ ] Real-time visualization
+- [ ] Machine learning integration for pattern detection
+- [ ] Empirical data calibration tools
 
-MIT License - see LICENSE file for details.
+## 📚 Documentation
+
+- **[Analysis Guide](docs/analysis_guide.md)**: Detailed methodology
+- **[API Reference](docs/api_reference.md)**: Function documentation
+- **[Examples](examples/)**: Working code examples
+- **[Paper](link-to-paper)**: Theoretical background
 
 ## 🆘 Support
 
-For issues or questions:
-- Open an issue on GitHub
-- Check the examples folder for usage patterns
-- Refer to the paper for theoretical background
+For help and support:
+- **Issues**: [GitHub Issues](https://github.com/yourusername/BeliefSim/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/BeliefSim/discussions)
+- **Email**: beliefim@example.com
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Gabriel Bontemps for the theoretical framework
+- Julia community for excellent scientific computing tools
+- Contributors and users for feedback and improvements
 
 ---
-*BeliefSim - Understanding how individual cognitive limitations shape collective dynamics*
+
+<div align="center">
+
+**BeliefSim** - *Understanding how individual cognitive limitations shape collective dynamics*
+
+[Documentation](docs/) • [Examples](examples/) • [Paper](link) • [Cite](#citation)
+
+</div>
