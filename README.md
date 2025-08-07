@@ -76,7 +76,7 @@ BeliefSim/
 ### Basic Installation
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/BeliefSim.git
+git clone https://github.com/TrompetteMarine/BeliefSim.git
 cd BeliefSim
 
 # Install core dependencies
