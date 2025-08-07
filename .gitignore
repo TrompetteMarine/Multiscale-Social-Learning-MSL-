@@ -33,3 +33,7 @@ desktop.ini
 
 # Logs
 *.log
+
+#graph and plots
+*.png 
+*.pdf
