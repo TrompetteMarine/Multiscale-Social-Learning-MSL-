@@ -3,7 +3,7 @@
 [![Julia 1.6+](https://img.shields.io/badge/Julia-1.6+-blue.svg)](https://julialang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Implementation of **"Multi-Scale Social Learning: From Individual Bounded Rationality to Collective Dynamics"** by Gabriel Bontemps (2025), published in Theoretical Economics.
+Implementation of **"Threshold Attention and Polarised Equilibria in Social Learning"** by Gabriel Bontemps (2025), working paper.
 
 ## 🌊 Overview
 
@@ -293,7 +293,7 @@ If you use BeliefSim in your research, please cite:
 @article{bontemps2025multiscale,
   title={Multi-Scale Social Learning: From Individual Bounded Rationality to Collective Dynamics},
   author={Bontemps, Gabriel},
-  journal={Theoretical Economics},
+  journal={},
   year={2025}
 }
 ```
@@ -326,7 +326,7 @@ We welcome contributions! Please:
 For help and support:
 - **Issues**: [GitHub Issues](https://github.com/yourusername/BeliefSim/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/BeliefSim/discussions)
-- **Email**: beliefim@example.com
+- **Email**: gabriel.bontemps@unice.fr
 
 ## 📄 License
 
