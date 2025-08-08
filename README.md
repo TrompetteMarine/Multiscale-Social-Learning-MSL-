@@ -15,6 +15,7 @@ BeliefSim is a comprehensive simulation and analysis framework for studying beli
 - **Jump-Diffusion Dynamics**: Continuous belief evolution with discrete resets when cognitive tension exceeds thresholds
 - **Multi-Scale Analysis**: Micro (individual), meso (community), and macro (population) level metrics
 - **Regime Classification**: Equilibrium, Meso-Buffered, Broadcast, and Cascade states
+- **Modular Architecture**: Clean separation between core simulation and optional analysis extensions
 - **Advanced Analysis Suite**: Phase diagrams, bifurcation analysis, basin mapping, Monte Carlo exploration
 
 ## 🏗️ Project Architecture
@@ -29,46 +30,32 @@ BeliefSim/
 │   ├── simulation.jl               # Jump-diffusion SDE solver
 │   ├── metrics.jl                  # Analysis metrics (consensus, polarization, shifts)
 │   ├── visualization.jl            # Basic plotting utilities
-│   │
-│   ├── 🆕 advanced_analysis.jl     # Advanced analysis module
-│   │   ├── Phase Diagrams          # 2D parameter space exploration
-│   │   ├── Bifurcation Analysis    # Continuation methods, branch tracking
-│   │   ├── Basin Mapping           # Attractor basins, fractal dimensions
-│   │   └── Monte Carlo Methods     # Large-scale sensitivity analysis
-│   │
-│   ├── 🆕 integration_patch.jl     # Bridge between simulation and analysis
-│   └── 🆕 ensemble.jl              # Ensemble simulation management
+│   ├── advanced_analysis/          # Advanced analysis submodules
+│   ├── advanced_analysis.jl        # Module entry point
+│   ├── integration_patch.jl        # Bridge between simulation and analysis
+│   └── ensemble.jl                 # Ensemble simulation management
 │
 ├── 📁 examples/                     # Usage examples
 │   ├── basic_simulation.jl         # Quick start example
 │   ├── paper_reproduction.jl       # Reproduce paper figures
-│   └── 🆕 advanced/
+│   └── advanced/                   # Advanced analysis demos
 │       ├── phase_exploration.jl    # Phase diagram examples
 │       ├── bifurcation_study.jl    # Detailed bifurcation analysis
 │       └── basin_analysis.jl       # Basin of attraction studies
 │
-├── 📁 scripts/                      # Analysis scripts
-│   ├── 🆕 advanced/
-│   │   ├── run_analysis.jl         # Complete advanced analysis
-│   │   ├── parameter_sweep.jl      # Systematic parameter exploration
-│   │   └── regime_detection.jl     # Regime classification studies
-│   │
-│   ├── bifurcation.jl              # Basic bifurcation analysis
-│   └── regime_analysis.jl          # Basic regime detection
-│
 ├── 📁 output/                       # Generated results
-│   ├── 🆕 advanced_analysis/       # Advanced analysis outputs
-│   ├── 🆕 phase_diagrams/          # Phase diagram results
-│   ├── 🆕 bifurcations/            # Bifurcation diagrams
-│   └── 🆕 basins/                  # Basin portraits
+│   ├── advanced_analysis/          # Advanced analysis outputs
+│   ├── phase_diagrams/             # Phase diagram results
+│   ├── bifurcations/               # Bifurcation diagrams
+│   └── basins/                     # Basin portraits
 │
 ├── 📁 docs/                         # Documentation
-│   ├── 🆕 analysis_guide.md        # Analysis methodology guide
-│   └── 🆕 api_reference.md         # Function documentation
+│   ├── analysis_guide.md           # Analysis methodology guide
+│   └── analysis_guide_advanced.md  # Advanced analysis guide
 │
-├── Project.toml                     # Package dependencies
-├── 🆕 setup_advanced_analysis.jl   # Setup script for advanced features
-└── README.md                        # This file
+├── Project.toml                    # Package dependencies
+├── setup_advanced_analysis.jl      # Setup script for advanced features
+└── README.md                       # This file
 ```
 
 ## 🚀 Installation
@@ -316,8 +303,8 @@ We welcome contributions! Please:
 
 ## 📚 Documentation
 
-- **[Analysis Guide](docs/analysis_guide.md)**: Detailed methodology
-- **[API Reference](docs/api_reference.md)**: Function documentation
+- **[Analysis Guide](docs/analysis_guide.md)**: Methodology and workflow
+- **[Advanced Analysis Guide](docs/analysis_guide_advanced.md)**: Phase diagrams, bifurcations, and basin studies
 - **[Examples](examples/)**: Working code examples
 - **[Paper](link-to-paper)**: Theoretical background
 

@@ -341,7 +341,7 @@ The methods implemented are based on:
 ## 📧 Support
 
 For issues or questions:
-- Check the example scripts in `scripts/advanced/`
+- Check the example scripts in `examples/advanced/`
 - Review the main BeliefSim documentation
 - Examine the source code comments
 
