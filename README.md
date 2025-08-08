@@ -147,6 +147,15 @@ mc_results = monte_carlo_phase_exploration(5000, param_ranges, base_params)
 
 ## 📊 Quick Start Examples
 
+The example scripts use a dedicated project to ensure all plotting and data
+dependencies are available. Activate this environment before running any
+example:
+
+```bash
+julia --project=examples -e 'using Pkg; Pkg.instantiate()' # run once to install deps
+julia --project=examples examples/basic_simulation.jl
+```
+
 ### Basic Simulation
 ```julia
 using BeliefSim
@@ -186,8 +195,11 @@ plot_phase_diagram(phase_data)
 ```
 
 ### Reproduce Paper Results
+Activate the examples project and run the script:
+
 ```bash
-julia --project=. examples/paper_reproduction.jl
+julia --project=examples -e 'using Pkg; Pkg.instantiate()' # run once
+julia --project=examples examples/paper_reproduction.jl
 ```
 
 ## 📈 Key Results & Insights
