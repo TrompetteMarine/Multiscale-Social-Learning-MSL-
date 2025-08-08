@@ -48,8 +48,7 @@ dirs = [
     "output/phase_diagrams",
     "output/bifurcations",
     "output/basins",
-    "scripts",
-    "scripts/advanced"
+    "examples/advanced"
 ]
 
 for dir in dirs
@@ -63,7 +62,7 @@ println("\n📝 Installing analysis modules...")
 src_files = [
     ("advanced_analysis.jl", "src/advanced_analysis.jl"),
     ("integration_patch.jl", "src/integration_patch.jl"),
-    ("advanced_analysis_example.jl", "scripts/advanced/run_analysis.jl")
+    ("advanced_analysis_example.jl", "examples/advanced/run_analysis.jl")
 ]
 
 println("\n⚙️  Testing installation...")
@@ -168,13 +167,13 @@ To use the advanced analysis features:
 
 6. RUN COMPLETE ANALYSIS:
    ```julia
-   julia scripts/advanced/run_analysis.jl
+   julia examples/advanced/run_analysis.jl
    ```
 
-For more examples, see the scripts/advanced/ directory.
+For more examples, see the examples/advanced/ directory.
 """)
 
 println("\n🎯 Next steps:")
-println("  1. Run: julia scripts/advanced/run_analysis.jl")
+println("  1. Run: julia examples/advanced/run_analysis.jl")
 println("  2. Check output/advanced_analysis/ for results")
 println("  3. Modify parameters in the example script as needed")
