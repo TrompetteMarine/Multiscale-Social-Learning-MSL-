@@ -25,7 +25,7 @@ mkpath(output_dir)
 # 1. PHASE DIAGRAM ANALYSIS
 # ============================================================================
 println("📊 1. Phase Diagram Analysis")
-println("-" * 40)
+println("-" ^ 40)
 
 # Define base parameters
 base_params = MSLParams(
@@ -85,7 +85,7 @@ println("   Critical α (bifurcation): ≈ $(round(critical_α, digits=2))")
 # 2. RIGOROUS BIFURCATION ANALYSIS
 # ============================================================================
 println("\n🔀 2. Bifurcation Analysis")
-println("-" * 40)
+println("-" ^ 40)
 
 # Configure bifurcation analysis
 bifurc_params = BifurcationParams(
@@ -129,7 +129,7 @@ end
 # 3. BASIN OF ATTRACTION ANALYSIS
 # ============================================================================
 println("\n🎯 3. Basin of Attraction Analysis")
-println("-" * 40)
+println("-" ^ 40)
 
 # Choose specific parameter values for basin analysis
 test_α_values = [0.3, 0.7, 1.2]  # Sub-critical, near-critical, super-critical
@@ -178,7 +178,7 @@ println("✅ Basin portraits saved")
 # 4. MONTE CARLO PARAMETER EXPLORATION
 # ============================================================================
 println("\n🎲 4. Monte Carlo Parameter Exploration")
-println("-" * 40)
+println("-" ^ 40)
 
 # Define parameter ranges for exploration
 param_ranges = Dict(
@@ -202,7 +202,7 @@ println("✅ Saved: monte_carlo_results.csv")
 
 # Display sensitivity analysis
 println("\n   Parameter Sensitivity (correlation with outcomes):")
-println("   " * "-" * 35)
+println( "-" ^ 35)
 for (param, importance) in mc_results[:param_importance]
     sens = mc_results[:sensitivity][param]
     println("   $param:")
@@ -215,7 +215,7 @@ end
 # 5. ADVANCED VISUALIZATIONS
 # ============================================================================
 println("\n🎨 5. Creating Advanced Visualizations")
-println("-" * 40)
+println("-" ^ 40)
 
 # 5.1 3D Phase Space Projection
 println("   Creating 3D phase space projection...")
@@ -295,9 +295,9 @@ println("✅ Advanced visualizations saved")
 # ============================================================================
 # 6. SUMMARY REPORT
 # ============================================================================
-println("\n" * "=" * 60)
+println("\n" ^ "=" * 60)
 println("📋 ANALYSIS SUMMARY")
-println("=" * 60)
+println("=" ^ 60)
 
 # Compile key findings
 summary = Dict(
@@ -342,7 +342,7 @@ open(joinpath(output_dir, "analysis_summary.txt"), "w") do io
     end
 end
 
-println("\n" * "=" * 60)
+println("\n" ^ "=" * 60)
 println("✅ Advanced analysis complete!")
 println("📁 Results saved in: $output_dir")
 println("\nKey outputs:")

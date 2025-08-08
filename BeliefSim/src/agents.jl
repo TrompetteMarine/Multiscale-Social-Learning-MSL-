@@ -31,7 +31,7 @@ AgentState(x₀::Float64) = AgentState(x₀, x₀, 1.0, 0.5, 1.0)
 # Parameters
 # ============================================================================
 
-@with_kw struct CognitiveParams
+@with_kw mutable struct CognitiveParams
     # Mean reversion and social influence (Equation 2)
     λ::Float64 = 1.0      # Mean reversion strength
     α::Float64 = 0.5      # Social influence scale
