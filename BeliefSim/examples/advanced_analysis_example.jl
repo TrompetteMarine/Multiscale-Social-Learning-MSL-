@@ -295,9 +295,9 @@ println("✅ Advanced visualizations saved")
 # ============================================================================
 # 6. SUMMARY REPORT
 # ============================================================================
-println("\n" * "=" * 60)
+println("\n" ^ "=" * 60)
 println("📋 ANALYSIS SUMMARY")
-println("=" * 60)
+println("=" ^ 60)
 
 # Compile key findings
 summary = Dict(
@@ -342,7 +342,7 @@ open(joinpath(output_dir, "analysis_summary.txt"), "w") do io
     end
 end
 
-println("\n" * "=" * 60)
+println("\n" ^ "=" * 60)
 println("✅ Advanced analysis complete!")
 println("📁 Results saved in: $output_dir")
 println("\nKey outputs:")

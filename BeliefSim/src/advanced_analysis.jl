@@ -7,6 +7,7 @@ using Plots, ColorSchemes, Contour
 using NearestNeighbors, Clustering
 using Optim, ForwardDiff
 using DataFrames, CSV
+using UUIDs
 
 export PhaseDiagramParams, BifurcationParams, BasinAnalysisParams
 export run_phase_diagram, run_bifurcation_analysis, analyze_basins_of_attraction
@@ -520,10 +521,92 @@ end
 # Monte Carlo Phase Space Exploration
 # ============================================================================
 
+function cut(x::Vector{T}, breaks::Vector{T}; labels::Vector{String}=String[]) where T <: Real
+    # Ensure the breaks are sorted
+    sort!(breaks)
+
+    # Determine the number of breaks
+    n = length(breaks)
+
+    # Check if labels are provided, if not, create default labels
+    if isempty(labels)
+        labels = ["$(uuid4())_$(breaks[i])_$(breaks[i+1])" for i in 1:n-1]
+    else
+        if length(labels) != n - 1
+            throw(ArgumentError("Number of labels must be one less than the number of breaks."))
+        end
+        # Append a unique UUID to each label
+        labels = ["$(uuid4())_$(labels[i])" for i in 1:length(labels)]
+    end
+
+    # Initialize the result vector
+    result = Vector{String}(undef, length(x))
+
+    # Assign each element of x to its corresponding interval
+    for i in eachindex(x)
+        found = false
+        for j in 1:n-1
+            if x[i] <= breaks[j+1]
+                result[i] = labels[j]
+                found = true
+                break
+            end
+        end
+        if !found
+            result[i] = "NA" # Assign NA if x[i] is greater than the largest break
+        end
+    end
+
+    return result
+end
+
+"""
+    compute_sensitivities(results, param_names)
+Calculate parameter sensitivities using various methods.
+"""
+function compute_sensitivities(results::DataFrame, param_names::Vector)
+    sensitivity_dict = Dict()
+    
+    for param in param_names
+        sensitivity_dict[param] = Dict(
+            :n_equilibria => cor(results[!, param], results.n_equilibria),
+            :stability => cor(results[!, param], results.stability),
+            :consensus => cor(results[!, param], results.consensus),
+            :polarization => cor(results[!, param], results.polarization),
+            :variance_explained => compute_variance_explained(results, param)
+        )
+    end
+    
+    return sensitivity_dict
+end
 """
     monte_carlo_phase_exploration(n_samples::Int, param_ranges::Dict, base_params)
 Comprehensive Monte Carlo exploration of parameter space.
 """
+
+function create_params_from_sample(base_params, sample::DataFrameRow)
+    # Create a deep copy of the base parameters to avoid modifying the original
+    modified_params = deepcopy(base_params)
+
+    # Iterate through each field in the sample and update the corresponding parameter
+    for param_name in names(sample)
+        param_value = sample[param_name]
+
+        # Check if the parameter is a field of the cognitive sub-structure
+        if hasfield(typeof(modified_params.cognitive), Symbol(param_name))
+            setfield!(modified_params.cognitive, Symbol(param_name), param_value)
+        # Check if the parameter is a field of the base_params itself
+        elseif hasfield(typeof(modified_params), Symbol(param_name))
+            setfield!(modified_params, Symbol(param_name), param_value)
+        else
+            @warn "Parameter $param_name not found in the structure."
+        end
+    end
+
+    return modified_params
+end
+
+
 function monte_carlo_phase_exploration(n_samples::Int, param_ranges::Dict, base_params)
     # Sample parameters using Latin Hypercube
     param_samples = latin_hypercube_sample(param_ranges, n_samples)
@@ -571,25 +654,7 @@ function monte_carlo_phase_exploration(n_samples::Int, param_ranges::Dict, base_
     )
 end
 
-"""
-    compute_sensitivities(results, param_names)
-Calculate parameter sensitivities using various methods.
-"""
-function compute_sensitivities(results::DataFrame, param_names::Vector)
-    sensitivity_dict = Dict()
-    
-    for param in param_names
-        sensitivity_dict[param] = Dict(
-            :n_equilibria => cor(results[!, param], results.n_equilibria),
-            :stability => cor(results[!, param], results.stability),
-            :consensus => cor(results[!, param], results.consensus),
-            :polarization => cor(results[!, param], results.polarization),
-            :variance_explained => compute_variance_explained(results, param)
-        )
-    end
-    
-    return sensitivity_dict
-end
+
 
 # ============================================================================
 # Visualization Functions
@@ -714,45 +779,51 @@ Visualize basins of attraction with boundaries and attractors.
 function plot_basin_portrait(basin_data::Dict)
     # Create colormap for basins
     n_attractors = basin_data[:n_attractors]
-    colors = distinguishable_colors(n_attractors + 1, [RGB(1,1,1)])[2:end]
-    
+    colors = distinguishable_colors(n_attractors + 1, [RGB(1,1,1)])[2:end] # Ensure enough colors
+
+    # Ensure we have at least one color, even if no attractors are found
+    if isempty(colors)
+        colors = [RGB(0,0,0)]  # Default to black if no attractors
+    end
+
     # Main basin plot
-    p1 = heatmap(basin_data[:x_grid], basin_data[:y_grid], 
-                 basin_data[:basin_map]',
+    p1 = heatmap(basin_data[:x_grid], basin_data[:y_grid], basin_data[:basin_map]',  # Ensure transposition matches
                  xlabel="x (belief)", ylabel="r (reference)",
                  title="Basins of Attraction",
-                 c=palette(colors), clims=(1, n_attractors),
+                 c=palette(colors[1:min(n_attractors, end)]), clims=(1, n_attractors),  # Safeguard against out-of-bounds
                  aspect_ratio=:equal)
-    
+
     # Mark attractors
     for (idx, attractor) in enumerate(basin_data[:attractors])
-        if basin_data[:attractor_types][idx] == :fixed_point
-            scatter!(p1, [attractor[1]], [attractor[2]], 
-                    marker=:star, ms=10, color=:white, 
-                    markerstrokecolor=:black, markerstrokewidth=2,
-                    label=(idx == 1 ? "Fixed Points" : ""))
-        else
-            scatter!(p1, [attractor[1]], [attractor[2]], 
-                    marker=:circle, ms=8, color=:white,
-                    markerstrokecolor=:black, markerstrokewidth=2,
-                    label=(idx == 1 ? "Limit Cycles" : ""))
+        if idx <= length(colors)  # Ensure index safety
+            if basin_data[:attractor_types][idx] == :fixed_point
+                scatter!(p1, [attractor[1]], [attractor[2]],
+                        marker=:star, ms=10, color=:white,
+                        markerstrokecolor=:black, markerstrokewidth=2,
+                        label=(idx == 1 ? "Fixed Points" : ""))
+            else
+                scatter!(p1, [attractor[1]], [attractor[2]],
+                        marker=:circle, ms=8, color=:white,
+                        markerstrokecolor=:black, markerstrokewidth=2,
+                        label=(idx == 1 ? "Limit Cycles" : ""))
+            end
         end
     end
-    
+
     # Basin size pie chart
     sizes = collect(values(basin_data[:basin_sizes]))
     labels = ["Basin $k" for k in keys(basin_data[:basin_sizes])]
-    
+
     p2 = pie(sizes, labels=labels, title="Basin Sizes",
-            color=colors[1:length(sizes)])
-    
+            color=colors[1:min(n_attractors, length(colors))])
+
     # Fractal dimension info
     p3 = plot([], [], framestyle=:none, legend=false)
     fractal_dim = basin_data[:fractal_dimensions]
     annotate!(p3, [(0.5, 0.7, text("Basin Boundary Analysis", 14, :center)),
                    (0.5, 0.5, text("Fractal Dimension: $(round(fractal_dim, digits=3))", 12)),
                    (0.5, 0.3, text("N Attractors: $(n_attractors)", 12))])
-    
+
     return plot(p1, p2, p3, layout=@layout([a{0.6w} [b; c]]), size=(1000, 600))
 end
 
@@ -856,25 +927,32 @@ function detect_period(trajectory; max_period=20)
     return 1  # No periodicity detected
 end
 
-function latin_hypercube_sample(param_ranges::Dict, n_samples::Int)
+function latin_hypercube_sample(param_ranges::Dict{Symbol, Tuple{Float64, Float64}}, n_samples::Int)
     n_params = length(param_ranges)
     samples = DataFrame()
-    
-    for (param_name, range) in param_ranges
+
+    for (param_name, range_tuple) in param_ranges
+        # Extract the range values from the tuple
+        range_start, range_end = range_tuple
+
         # Create stratified samples
-        intervals = range(range[1], range[2], length=n_samples+1)
+        intervals = range(range_start, range_end, length=n_samples+1)
         points = Float64[]
-        
+
         for i in 1:n_samples
-            push!(points, intervals[i] + rand() * (intervals[i+1] - intervals[i]))
+            # Generate a random sample within each interval
+            sample = intervals[i] + rand() * (intervals[i+1] - intervals[i])
+            push!(points, sample)
         end
-        
+
+        # Shuffle to ensure randomness across the hypercube
         shuffle!(points)
         samples[!, param_name] = points
     end
-    
+
     return samples
 end
+  
 
 function detect_bifurcation_type(idx, param_vals, stable_branches, unstable_branches)
     # Simplified bifurcation type detection
